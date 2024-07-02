@@ -1,6 +1,8 @@
 # Objectivity/Subjectivity analysis on newspaper articles
 
-Training a model to detect wether a given text is objective or not.
+## Goal
+
+The Goal of this notebook is to train a model to detect wether a given text is objective or subjective.
 
 ## Idea
 
@@ -24,29 +26,30 @@ So I moved from scrapy to selenium, which opens a browser instance and renders t
 
 Initially I had planned to get urls to 30.000 movies, but the script crashed multiple times around 7500 urls. Sometimes due to memory consumption, sometimes the browser crashed.
 
-Finally I had 7.750 URLs
+One way to get more URLs would be to provide links to the advanced search with different filters and sorting and loop over these URLs every time the instance crashes, but that would be a lot of manual work.
+
+But since I had already 7.750 URLs, I decided to move on.
 
 ### Get Reviews and Summaries
 
 Initially I started using scrapy as well. That turned out more difficult than I thought, since here also the content is loaded dynamically and even worse: The container names and ids differ from movie to movie. So here also I moved to selenium. Most content on these pages is lazy-loaded when the container is scrolles into view.
 So at first I located the element containing the text "Storyline" and scrolled that into view. This action triggers the storyline itself to load. The same was done for the Review. Now that I had Summary and Review, I stored that away together with the URL.
 
-This process took quite some time, but fortunally I could run multiple instances (12) in parallel. This resulted in 9344 texts. (I was impatient and did not want to wait for the entire list to finish)
+This process took quite some time, but fortunally I could run multiple instances (12) in parallel. This resulted in 7010 texts for each class. The difference in number is due to the fact, that not every movie has a review or some errors occured during scraping.
 
 ### Data Preprocessing
 
 This data now contained some impurities like the name of the author and sometimes a rating at the beginning.
-Also the JSON format used before cannot be read with tensorflow.
+Also some HTML Tags are still present and the JSON format used before cannot be read with tensorflow.
 
-So the cleanup script takes all unwanted elements and stores them in a file structure, that tensorflow can easly read.
+So the cleanup script takes all unwanted elements away and stores the result in a file structure, that tensorflow can easly read.
 
 ### Classification
 
-For classification I decided to use the BERT model by Google.
+For classification I decided to use different versions of the BERT model by Google.
 BERT is a Large Language Model based on the transformer architecture and comes in different variants, different sizes and pretrained with different data.
 
-Google has an excellent tutorial on how to build a taxt classifier based on BERT, which this is heavily based on.
-This resulted in an accuracy of 99.3% after 5 epochs of training.
+Google has an [excellent tutorial](https://www.tensorflow.org/text/tutorials/classify_text_with_bert) on how to build a taxt classifier based on BERT, which this is heavily based on.
 
 The model is build as following:
 
@@ -58,16 +61,30 @@ The output of this neuron can now be used as a classification when combined with
 
 ## Conclusion
 
+### Model Comparison
+
+32 different variations of the BERT model were trained and tested. All models were trained for 5 epochs and tested on the same test set.
+The best model had an accuracy of 99.43 %. The smallest model had an accuracy of 97.18 %.
+
+Taking a look at the plots we can see, that the ["albert" (a little bert)](https://github.com/google-research/albert) archieves a very high accuracy with relativley few parameters.
+Looking at the training time, we can see, that the "albert" model takes more time than most of the models with comparable parameter count.
+
+Looking at the description, we can also see why that is the case. Albert shares wights between layers, which reduces the parameter count but does not reduce computation time.
+
+## Generalization
+
 The Idea was, that a model trained using movie reviews and summaries can also distinguish betwenn objective and subjective in other texts. Altough I tested it succesful with a handful of texts, this is not a reliable metric.
 
 The other problem is, that this model is only based on phrasing and does not perform any type of fact checking.
 If a opinion is formulated as facts, the model still detects that the text is objective.
 Thus the model is not useful for fake news detection.
 
-Tested on 500 Articles on the "tagesschau-meldungen" dataset returns 12 subjective results.
-Given that tagesschau is always objective this is an accuracy of 97.6%, which is quite remarkable.
+Tested on all 42105 Articles on the "tagesschau-meldungen" dataset returns 632 subjective results using the highest scoring model.
+Assumed that tagesschau is always objective this is an accuracy of 98.5%, which is quite remarkable.
 This also shows a great benefit of using the pretrained BERT model: All movie summaries and reviews were english, but the model can still classify the german news articles.
 
-# Number
+# Numbers
 
-Training time for all final models combined: 9h on Google Colab Pro (NVidia Tesla T4 GPU)
+All trainings combined took about 45 Compute Units on a Google Colab Pro Instance with a Tesla T4 GPU.
+This is equivalent to 25 hours of training time.
+The Dataset contains 7010 movie summaries and 7010 reviews consisting of 136484 Sentences combined.
