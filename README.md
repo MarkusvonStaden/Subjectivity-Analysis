@@ -2,7 +2,7 @@
 
 ## Goal
 
-The Goal of this notebook is to train a model to detect wether a given text is objective or subjective.
+The Goal of these notebooks is to train a model to detect wether a given text is objective or subjective.
 
 ## Idea
 
@@ -85,6 +85,6 @@ This also shows a great benefit of using the pretrained BERT model: All movie su
 
 # Numbers
 
-All trainings combined took about 45 Compute Units on a Google Colab Pro Instance with a Tesla T4 GPU.
+All trainings and iterations combined took about 45 Compute Units on a Google Colab Pro Instance with a Tesla T4 GPU.
 This is equivalent to 25 hours of training time.
 The Dataset contains 7010 movie summaries and 7010 reviews consisting of 136484 Sentences combined.
